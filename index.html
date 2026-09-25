@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ORDER4LOW DIMENSIONAL — Institutional Order Flow for MT5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;scroll-padding-top:80px;padding-top:env(safe-area-inset-top,0px);}
+  img,svg{display:block;max-width:100%;}
+  a{text-decoration:none;color:inherit;}
+  ul{list-style:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  :root{
+    --font-display:'Rajdhani',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --cut:14px;
+    --transition:220ms cubic-bezier(.4,0,.2,1);
+    --bg:#0a0b0a; --bg-alt:#101110; --surface:#151715; --surface-2:#1c1f1c;
+    --border:rgba(255,255,255,0.09); --border-strong:rgba(255,255,255,0.16);
+    --text:#f2f4f1; --text-muted:#8d948c; --text-faint:#5b6158;
+    --accent:#3ddc35; --accent-dim:#2a9e25; --accent-soft:rgba(61,220,53,0.10);
+    --accent-text:#0a0b0a; --shadow:rgba(0,0,0,0.5); --grid-line:rgba(255,255,255,0.04);
+  }
+  body{background:var(--bg); color:var(--text); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:1240px; margin:0 auto; padding:0 32px;}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; letter-spacing:0.01em; line-height:1.08;}
+  section{position:relative;}
+  .section-pad{padding:110px 0;}
+  @media(max-width:768px){.section-pad{padding:72px 0;}}
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--accent); display:inline-flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:7px; height:7px; background:var(--accent); display:inline-block; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);}
+
+  .btn{
+    font-family:var(--font-display); font-weight:600; font-size:14.5px; letter-spacing:0.03em;
+    text-transform:uppercase; padding:15px 30px; border:1.5px solid transparent;
+    display:inline-flex; align-items:center; gap:10px;
+    clip-path:polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+    transition:var(--transition);
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-text);}
+  .btn-primary:hover{background:var(--accent-dim); transform:translateY(-1px);}
+  .btn-ghost{background:transparent; border-color:var(--border-strong); color:var(--text);}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
+  .btn-sm{padding:11px 22px; font-size:12.5px; --cut:10px;}
+
+  /* Nav */
+  header{position:fixed; top:0; left:0; right:0; z-index:1000; background:transparent; border-bottom:1px solid transparent; transition:var(--transition); padding-top:env(safe-area-inset-top,0px);}
+  header.scrolled{background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(14px); border-bottom-color:var(--border);}
+  nav{display:flex; align-items:center; justify-content:space-between; height:76px;}
+  .logo{display:flex; align-items:center;}
+  .wordmark{display:inline-grid; grid-template-columns:auto auto auto; column-gap:3px; row-gap:1px; font-family:var(--font-display); font-weight:700; letter-spacing:0.03em; color:var(--text); text-transform:uppercase; line-height:0.85; user-select:none;}
+  .wordmark .wm-num{font-size:1.9em; font-style:italic; color:var(--accent); line-height:0.78; transform:skewX(-6deg); justify-self:start; align-self:center;}
+  .wordmark .wm-order,.wordmark .wm-low,.wordmark .wm-imensional{transform:skewX(-6deg); display:inline-block; font-style:italic;}
+  .wordmark .wm-order{grid-column:1; grid-row:1; align-self:end;}
+  .wordmark .wm-low{grid-column:3; grid-row:1; align-self:end;}
+  .wordmark .wm-imensional{grid-column:3; grid-row:2; align-self:end;}
+  .wordmark--sm{font-size:19px;}
+  .wordmark--lg{font-size:30px;}
+  .nav-links{display:flex; gap:36px;}
+  .nav-links a{font-family:var(--font-display); font-weight:600; font-size:13.5px; letter-spacing:0.03em; text-transform:uppercase; color:var(--text-muted); position:relative; padding:6px 0; transition:color var(--transition);}
+  .nav-links a::after{content:""; position:absolute; left:0; bottom:0; height:2px; width:0; background:var(--accent); transition:width var(--transition);}
+  .nav-links a:hover{color:var(--text);} .nav-links a:hover::after{width:100%;}
+  .nav-right{display:flex; align-items:center; gap:18px;}
+  .nav-toggle-btn{display:none; flex-direction:column; justify-content:center; gap:5px; width:30px; height:24px; background:none; border:none;}
+  .nav-toggle-btn span{display:block; width:100%; height:2px; background:var(--text);}
+  @media(max-width:900px){
+    .nav-links{position:fixed; top:76px; left:0; right:0; background:var(--bg); border-bottom:1px solid var(--border); flex-direction:column; gap:0; max-height:0; overflow:hidden; transition:max-height var(--transition);}
+    .nav-links.open{max-height:400px;}
+    .nav-links a{padding:16px 32px; width:100%; border-bottom:1px solid var(--border);}
+    .nav-toggle-btn{display:flex;}
+    .nav-right .btn-sm{display:none;}
+  }
+
+  /* Hero */
+  .hero{padding:172px 0 110px; background:radial-gradient(ellipse 70% 50% at 80% 0%, var(--accent-soft), transparent 60%), var(--bg); position:relative; overflow:hidden;}
+  .hero::before{
+    content:""; position:absolute; inset:0; z-index:1;
+    background-image:linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.7) 30%, transparent 90%);
+  }
+  .hero-glow{position:absolute; width:56vw; height:56vw; max-width:700px; max-height:700px; border-radius:50%; top:-22%; right:-12%; z-index:1; pointer-events:none; background:radial-gradient(circle, rgba(61,220,53,0.32), transparent 70%); filter:blur(50px); animation:glowPulse 7s ease-in-out infinite;}
+  @keyframes glowPulse{0%,100%{opacity:0.4; transform:scale(1);} 50%{opacity:0.85; transform:scale(1.1);}}
+  .hero-grid{position:relative; z-index:2; max-width:760px;}
+  .hero h1{font-size:clamp(38px,5.2vw,62px); margin:20px 0 22px;}
+  .hero h1 .accent-line{color:var(--accent);}
+  .hero p.lead{font-size:17px; color:var(--text-muted); max-width:520px; margin-bottom:34px;}
+  .hero-actions{display:flex; gap:16px; flex-wrap:wrap;}
+  .hero-note{margin-top:18px; font-size:13px; color:var(--text-faint); font-family:var(--font-mono);}
+  .hero-note .mono{color:var(--accent);}
+  @media(max-width:940px){.hero{padding:150px 0 70px;}}
+
+  /* About */
+  .about{background:var(--bg-alt); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .about-grid{display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:start;}
+  .about h2{font-size:clamp(27px,3.2vw,38px); margin:16px 0 0; max-width:420px;}
+  .about-copy p{font-size:16px; color:var(--text-muted); max-width:560px; margin-bottom:26px;}
+  .metrics{display:flex; gap:44px; flex-wrap:wrap;}
+  .metric .num{font-family:var(--font-mono); font-size:28px; color:var(--accent);}
+  .metric .lbl{font-size:12px; color:var(--text-faint); letter-spacing:0.05em; text-transform:uppercase; margin-top:4px;}
+  @media(max-width:860px){.about-grid{grid-template-columns:1fr; gap:32px;}}
+
+  /* Features */
+  .features-head{max-width:600px; margin-bottom:52px;}
+  .features-head h2{font-size:clamp(27px,3.2vw,38px); margin-top:16px;}
+  .features-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border);}
+  .feature-card{background:var(--bg); padding:34px 30px; transition:background var(--transition);}
+  .feature-card:hover{background:var(--surface);}
+  .feature-icon{width:40px; height:40px; border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:22px; position:relative;}
+  .feature-icon::before{content:""; width:13px; height:13px; background:var(--accent);}
+  .feature-card h3{font-size:18px; margin-bottom:9px;}
+  .feature-card p{font-size:14px; color:var(--text-muted);}
+  @media(max-width:860px){.features-grid{grid-template-columns:1fr;}}
+  @media(min-width:861px) and (max-width:1180px){.features-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* How it works */
+  .how{background:var(--bg-alt); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .how-head{max-width:600px; margin-bottom:60px;}
+  .how-head h2{font-size:clamp(27px,3.2vw,38px); margin-top:16px;}
+  .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative;}
+  .steps::before{content:""; position:absolute; top:22px; left:0; right:0; height:1px; background:var(--border-strong);}
+  .step{position:relative; padding-right:22px;}
+  .step .index{font-family:var(--font-mono); font-size:14px; color:var(--accent); width:44px; height:44px; border:1.5px solid var(--accent); background:var(--bg-alt); display:flex; align-items:center; justify-content:center; margin-bottom:24px; position:relative; z-index:2; clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));}
+  .step h3{font-size:16px; margin-bottom:8px;}
+  .step p{font-size:13.5px; color:var(--text-muted);}
+  @media(max-width:860px){.steps{grid-template-columns:1fr; gap:34px;} .steps::before{display:none;}}
+
+  /* Pricing */
+  .pricing-head{max-width:600px; margin-bottom:52px;}
+  .pricing-head h2{font-size:clamp(27px,3.2vw,38px); margin-top:16px;}
+  .pricing-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:22px; align-items:stretch;}
+  @media(max-width:900px){.pricing-grid{grid-template-columns:1fr;}}
+  .price-card{background:var(--surface); border:1px solid var(--accent); background:linear-gradient(180deg, var(--accent-soft), transparent 40%), var(--surface); padding:34px 30px; display:flex; flex-direction:column;}
+  .price-tag{font-family:var(--font-mono); font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;}
+  .price-card h3{font-size:22px; margin-bottom:6px;}
+  .price-card .desc{font-size:13px; color:var(--text-muted); margin-bottom:18px;}
+  .price-row{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+  .price-row .strike{color:var(--text-faint); text-decoration:line-through; font-family:var(--font-mono); font-size:18px;}
+  .price-card .amount{font-family:var(--font-mono); font-size:34px;}
+  .price-card .amount span{font-size:13px; color:var(--text-faint); font-weight:400;}
+  .coupon-line{font-family:var(--font-mono); font-size:12.5px; color:var(--text-muted); margin-bottom:22px;}
+  .coupon-line .mono{color:var(--accent);}
+  .price-card ul{margin-bottom:26px; flex:1;}
+  .price-card li{font-size:13px; color:var(--text-muted); padding:9px 0; border-top:1px solid var(--border); display:flex; gap:10px;}
+  .price-card li:first-child{border-top:none;}
+  .price-card li::before{content:""; width:7px; height:7px; margin-top:6px; background:var(--accent); flex-shrink:0; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);}
+
+  .referral-card{background:var(--surface); border:1px solid var(--border); padding:30px 28px; display:flex; flex-direction:column;}
+  .referral-card .price-tag{color:#a89bff;}
+  .referral-card .big{font-family:var(--font-mono); font-size:34px; color:#a89bff; margin-bottom:14px;}
+  .referral-card p{font-size:13.5px; color:var(--text-muted); margin-bottom:20px;}
+  .ref-flow div{font-size:12.5px; color:var(--text-muted); padding:9px 0; border-top:1px solid var(--border);}
+  .ref-flow div:first-child{border-top:none;}
+  .ref-flow b{color:var(--text);}
+
+  /* Trust */
+  .trust{background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:80px 0; text-align:center;}
+  .trust h2{font-size:clamp(24px,3.4vw,36px); max-width:760px; margin:0 auto 32px; line-height:1.3;}
+  .trust-chips{display:flex; justify-content:center; gap:14px; flex-wrap:wrap;}
+  .chip{font-family:var(--font-mono); font-size:12px; letter-spacing:0.05em; text-transform:uppercase; border:1px solid var(--border-strong); padding:9px 18px; color:var(--text-muted);}
+
+  /* Footer */
+  footer{padding:70px 0 30px; background:var(--bg-alt);}
+  .footer-top{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:44px; margin-bottom:56px;}
+  .footer-brand .logo{margin-bottom:14px;}
+  .footer-brand p{font-size:13.5px; color:var(--text-muted); max-width:280px;}
+  .footer-col h4{font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:16px;}
+  .footer-col a{display:block; font-size:14px; color:var(--text-muted); padding:6px 0; transition:color var(--transition);}
+  .footer-col a:hover{color:var(--accent);}
+  .footer-bottom{border-top:1px solid var(--border); padding-top:26px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-faint);}
+  @media(max-width:860px){.footer-top{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.footer-top{grid-template-columns:1fr;}}
+
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.visible{opacity:1; transform:translateY(0);}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;} .reveal{opacity:1; transform:none;}}
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <div class="wrap">
+    <nav>
+      <a href="#top" class="logo">
+        <span class="wordmark wordmark--sm">
+          <span class="wm-order">ORDER</span>
+          <span class="wm-num" style="grid-column:2;grid-row:1;">4</span>
+          <span class="wm-low">LOW</span>
+          <span class="wm-num" style="grid-column:2;grid-row:2;">D</span>
+          <span class="wm-imensional">IMENSIONAL</span>
+        </span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#platform">Platform</a></li>
+        <li><a href="#features">Indicators</a></li>
+        <li><a href="#how">Licensing</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-right">
+        <a href="#pricing" class="btn btn-ghost btn-sm">Log In</a>
+        <a href="#pricing" class="btn btn-primary btn-sm">Get Access</a>
+        <button class="nav-toggle-btn" id="navToggleBtn" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero" id="platform">
+    <div class="hero-glow"></div>
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Institutional Order Flow Suite</span>
+        <h1>The <span class="accent-line">Order Flow</span> Engine for Serious MT5 Traders</h1>
+        <p class="lead">Range delta profiles, session volume, VWAP, big-trade prints, and automatic LVN/POC highlighting — one installer, running on your MetaTrader 5 charts in minutes.</p>
+        <div class="hero-actions">
+          <a href="#pricing" class="btn btn-primary">Start for $7/mo</a>
+          <a href="#features" class="btn btn-ghost">See the Indicators</a>
+        </div>
+        <div class="hero-note">Launch code <span class="mono">#NIGHTVISION1</span> — drops $10/mo to $7/mo, recurring.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about section-pad" id="solutions">
+    <div class="wrap about-grid">
+      <div class="reveal">
+        <span class="eyebrow">About the Bundle</span>
+        <h2>Institutional-grade order flow, priced for retail.</h2>
+      </div>
+      <div class="about-copy reveal">
+        <p>ORDER4LOW DIMENSIONAL bundles a full order flow toolkit for CFD traders on MT5 — a shared core engine feeding three specialized modules, licensed per MT5 account and renewed on a 31-day cycle.</p>
+        <div class="metrics">
+          <div class="metric"><div class="num">4</div><div class="lbl">Bundled modules</div></div>
+          <div class="metric"><div class="num">31d</div><div class="lbl">License cycle</div></div>
+          <div class="metric"><div class="num">24/7</div><div class="lbl">Tick-by-tick feed</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="features">
+    <div class="wrap">
+      <div class="features-head reveal">
+        <span class="eyebrow">The Bundle</span>
+        <h2>One installer. Four ways to read the tape.</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>Range &amp; Session Profiles</h3><p>Volume and delta stacked by price, auto-anchored to session or a custom range.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>Delta &amp; VWAP</h3><p>Cumulative buy/sell delta plotted against session VWAP in real time.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>Big Trades</h3><p>Flags unusually large prints on the tape the moment they happen.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>LVN / POC Auto-Highlight</h3><p>Low-volume nodes and points of control marked automatically as they form.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>Core Engine</h3><p>A shared background engine handles the feed and calculations once, keeping charts fast.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon"></div><h3>Per-Account Licensing</h3><p>Your 7-character key is tied to your MT5 account number and checked on launch.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how section-pad" id="how">
+    <div class="wrap">
+      <div class="how-head reveal">
+        <span class="eyebrow">Licensing</span>
+        <h2>From payment to live chart in four steps.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="index">01</div><h3>Subscribe</h3><p>Pay $10/mo, or $7/mo with code #NIGHTVISION1. Billing runs every 31 days.</p></div>
+        <div class="step reveal"><div class="index">02</div><h3>Get Your Key</h3><p>A 7-character hashed code is generated and tied to your MT5 account number.</p></div>
+        <div class="step reveal"><div class="index">03</div><h3>Paste &amp; Launch</h3><p>Drop the code into the indicator's input field — it authenticates on launch.</p></div>
+        <div class="step reveal"><div class="index">04</div><h3>Trade the Window</h3><p>Charts render for 31 days. Renew before expiry and the same code carries forward.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="pricing">
+    <div class="wrap">
+      <div class="pricing-head reveal">
+        <span class="eyebrow">Pricing</span>
+        <h2>One plan. One coupon. No tiers to compare.</h2>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card reveal">
+          <div class="price-tag">ORDER4LOW Access</div>
+          <h3>Full Bundle</h3>
+          <p class="desc">All four indicators, one installer</p>
+          <div class="price-row"><span class="strike">$10</span><span class="amount">$7<span>/mo</span></span></div>
+          <div class="coupon-line">Code <span class="mono">#NIGHTVISION1</span> applied — recurring $7/mo, billed every 31 days</div>
+          <ul>
+            <li>All four indicators, one installer</li>
+            <li>7-character key tied to your MT5 account</li>
+            <li>Dashboard with license, downloads &amp; referrals</li>
+            <li>Renews automatically every 31 days</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary">Get Access</a>
+        </div>
+        <div class="referral-card reveal">
+          <div class="price-tag">Referral Program</div>
+          <div class="big">30%<span style="font-size:14px;color:var(--text-faint);font-weight:500;"> lifetime, recurring</span></div>
+          <p>Share your link. Every time someone you referred renews — at $10 or $7 — you earn 30% of that cycle's revenue, for as long as they stay subscribed.</p>
+          <div class="ref-flow">
+            <div><b>1.</b> Get your unique referral link from the dashboard</div>
+            <div><b>2.</b> A trader signs up through your link</div>
+            <div><b>3.</b> Every renewal, 30% is credited to your balance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="wrap">
+      <h2 class="reveal">Built for traders who need the tape read fast, licensed cleanly, and running every session.</h2>
+      <div class="trust-chips reveal">
+        <span class="chip">Compiled .EX5 Files</span>
+        <span class="chip">Hashed Activation Keys</span>
+        <span class="chip">31-Day Secure License</span>
+        <span class="chip">Encrypted WebRequest Auth</span>
+        <span class="chip">MT5 Native</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#top" class="logo" style="margin-bottom:14px;">
+          <span class="wordmark wordmark--lg">
+            <span class="wm-order">ORDER</span>
+            <span class="wm-num" style="grid-column:2;grid-row:1;">4</span>
+            <span class="wm-low">LOW</span>
+            <span class="wm-num" style="grid-column:2;grid-row:2;">D</span>
+            <span class="wm-imensional">IMENSIONAL</span>
+          </span>
+        </a>
+        <p>Institutional order flow tools for CFD traders on MetaTrader 5.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="#platform">Platform</a>
+        <a href="#features">Indicators</a>
+        <a href="#how">Licensing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#pricing">Pricing</a>
+        <a href="#pricing">Referral Program</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="#pricing">Log In</a>
+        <a href="#pricing">Get Access</a>
+        <a href="#pricing">Referral Dashboard</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span id="year"></span> Order4Low Dimensional. All rights reserved.</span>
+      <span>SYSTEM STATUS: OPERATIONAL</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const navToggleBtn = document.getElementById('navToggleBtn');
+  const navLinks = document.getElementById('navLinks');
+  navToggleBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 12));
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){ entry.target.classList.add('visible'); revealObserver.unobserve(entry.target); }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
