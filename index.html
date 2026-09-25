@@ -303,6 +303,8 @@
             <li>Renews automatically every 31 days</li>
           </ul>
           <a href="#contact" class="btn btn-primary">Get Access</a>
+          <button type="button" class="btn btn-ghost" id="downloadPackBtn" style="margin-top:12px;width:100%;justify-content:center;">Download Indicator Pack</button>
+          <div style="font-size:11.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:10px;">.zip · installer + license instructions</div>
         </div>
         <div class="referral-card reveal">
           <div class="price-tag">Referral Program</div>
@@ -365,6 +367,7 @@
         <a href="#pricing">Log In</a>
         <a href="#pricing">Get Access</a>
         <a href="#pricing">Referral Dashboard</a>
+        <a href="#" id="footerDownloadLink">Download Indicator Pack</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -391,6 +394,44 @@
     });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  /* ============ DOWNLOAD INDICATOR PACK ============ */
+  const ORDER4LOW_PACK_B64 = "UEsDBBQAAAAIAIKtOV3L/nO7wQIAAEEFAAAKABwAUkVBRE1FLnR4dFVUCQADJOu2aiTrtmp1eAsAAQQAAAAABAAAAACVVE1vGjEQvftXjHJoE1VslDZRT21FIVFRSSBAkyMy3mHXwtirtZeEW39Ef2F/SZ+9kAQ1h9YSYuX5evPmjUeT/uXkfDi6p/7g+vJmOhjddIf0++cvGthcKxlcTWOpVuLTPx4hZqW0K09LRObuwRonc20LCiXT6NVqi8bmhlPANQc5q2XONV1kQtx/687eTmkAz/4lHTurmLauqck3C69qXQXtLGlPUgW94RPR+e8jOjSqUe986B7mPVfz/NIW2nLGjxd0cKalrDmnXAZJS8bXG1LSqMbIhIJT2EG6KXsP03wibcHzce2W2rDfZU6XyOFbJ9o406z5NGeD/NXO9yBdP5rmd/fd8d/gqNesE5IN0y6FcSEApSyktj5QjDtI91UXiWo/H97dzMej3susMHZCtAKKtsHTO5JNcGtUUAT/U/hTqYvS4BcwXyG6vdngrjvDTF+MQZxl1HPVlqQxlAqkvgg5XTvK69kFHT2JzR9BBwYQBUAcX8GXOp9pVLGlfiT+Khnj3fXt8CL+P4eeZOJ9RhP2QdbhQEokLQZXy4JYqhLF99J2TzAUphsy8SGD3H3YyexjJ15DXEhitGLrmVa8peNl7datSy59uXCyzk/aniDzCP1ouHP/ztsjWKomoHM2OUqmVYhSo1Zqz3gycZ7RrGyLQNZBY4AviZJKucYGss16AUyxLbhtpNF52p8PZwC09RFBgpj2IukzEmP54ZX1WfAyYtGB+LHSNYaDiivmKmZ55saDgQ1jKac/xuPRZLYfsrhtwDgSYQsXDm1GtWHa7Va4PXGQyBdAiPRHp4Qu8uA1yJZBuKRL4x5yvY7uzkqTKTjFt6iHOaEV7IpKvcRHBn3HxYfOpeKylUWFl0oW3HKI4Ar6yV/KDhsc1wONYJUF+mwfjj0h4BTdl7VrijKh2/P9NGWSyygGVbJaoY9M/AFQSwECHgMUAAAACACCrTldy/5zu8ECAABBBQAACgAYAAAAAAABAAAApIEAAAAAUkVBRE1FLnR4dFVUBQADJOu2anV4CwABBAAAAAAEAAAAAFBLBQYAAAAAAQABAFAAAAAFAwAAAAA=";
+
+  async function naxsDownloadPack(btn){
+    const origText = btn.textContent;
+    if(!window.claude || typeof window.claude.use !== 'function'){
+      alert('Downloads only work once this page is opened as a published artifact link.');
+      return;
+    }
+    let downloads;
+    try{ downloads = await window.claude.use('downloads'); }catch(e){ downloads = null; }
+    if(!downloads){
+      alert('Downloads aren\'t available in this view.');
+      return;
+    }
+    btn.textContent = 'Preparing…';
+    btn.disabled = true;
+    try{
+      const binary = atob(ORDER4LOW_PACK_B64);
+      const bytes = new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+      await downloads.save({ filename: 'Order4Low_Bundle_v1.zip', data: bytes });
+    }catch(e){
+      if(!e || e.code !== 'declined'){
+        console.error('Order4Low: download failed', e);
+        alert('Could not start the download. Please try again.');
+      }
+    }
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+
+  document.getElementById('downloadPackBtn')?.addEventListener('click', function(){ naxsDownloadPack(this); });
+  document.getElementById('footerDownloadLink')?.addEventListener('click', function(e){
+    e.preventDefault();
+    naxsDownloadPack(this);
+  });
 </script>
 
 </body>
