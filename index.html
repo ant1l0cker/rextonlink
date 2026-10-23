@@ -217,7 +217,7 @@ footer .fl{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;max-width:none}f
 <body>
 <header id="hd"><div class="wrap"><nav>
 <a href="#top" class="logo">Rexton<b>Link</b></a>
-<ul class="links" id="links"><li><a href="#how">How it works</a></li><li><a href="#jobs">Jobs</a></li><li><a href="#why">Why RextonLink</a></li><li><a href="#faq">FAQ</a></li></ul>
+<ul class="links" id="links"><li><a href="#how">How it works</a></li><li><a href="#jobs">Jobs</a></li><li><a href="#why">Why RextonLink</a></li><li><a href="#data">Your data</a></li><li><a href="#faq">FAQ</a></li></ul>
 <div class="nr">
   <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">
     <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
@@ -266,6 +266,15 @@ footer .fl{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;max-width:none}f
 <div><div class="ic">&#8962;</div><h3>Remote-first roles</h3><p>Work from where you are. Almost every role is remote, with flexible schedules and clear contract terms.</p></div>
 </div></div></section>
 
+<section class="alt pad" id="data"><div class="wrap">
+<span class="eyebrow">Your information</span><h2>How we handle what you share with us.</h2>
+<div class="feat">
+<div><div class="ic">1</div><h3>Identity verification</h3><p>Your ID photo is stored in a private file store and is only ever opened by a reviewer confirming your application — it is never made public or shared with other applicants.</p></div>
+<div><div class="ic">2</div><h3>Tax and payment details</h3><p>Your SSN or EIN and payment details are only requested after you've passed an assessment, and only the last four digits of your tax ID are kept on file once submitted.</p></div>
+<div><div class="ic">3</div><h3>Human review</h3><p>Every application and assessment is read by a person, not an automated scoring system. You can see the status of each application from your dashboard at any time.</p></div>
+<div><div class="ic">4</div><h3>Your control</h3><p>You can log in at any point to review what you've submitted. If you'd like your data removed, contact us and we will delete it.</p></div>
+</div></div></section>
+
 <section class="pad" id="faq"><div class="wrap">
 <span class="eyebrow">FAQ</span><h2>Questions applicants ask us.</h2>
 <div class="faq">
@@ -281,8 +290,8 @@ footer .fl{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;max-width:none}f
 <footer><div class="wrap">
 <a href="#top" class="logo">Rexton<b>Link</b></a>
 <p>AI hiring for technical and professional roles. Verified candidates, serious work.</p>
-<p class="fl"><a href="#jobs">Jobs</a><a href="#how">How it works</a><a href="#why">Why RextonLink</a><a href="#faq">FAQ</a></p>
-<div class="ft"><span>&copy; <span id="yr"></span> RextonLink. All rights reserved. · build 7</span><span>SYSTEM STATUS: OPERATIONAL</span><a href="#admin" id="adminLink" style="color:var(--fa)">Admin</a></div>
+<p class="fl"><a href="#jobs">Jobs</a><a href="#how">How it works</a><a href="#why">Why RextonLink</a><a href="#data">Your data</a><a href="#faq">FAQ</a></p>
+<div class="ft"><span>&copy; <span id="yr"></span> RextonLink. All rights reserved. · build 8</span><span>SYSTEM STATUS: OPERATIONAL</span><a href="#admin" id="adminLink" style="display:none" aria-hidden="true"></a></div>
 </div></footer>
 <div class="toast" id="toast" role="status"></div>
 
@@ -397,8 +406,14 @@ footer .fl{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;max-width:none}f
   <p style="color:var(--mu);font-size:14px">Payment setup becomes available once you've passed an assessment for one of your applications.</p>
 </div>
 <div id="payW2" class="card" hidden>
+  <div id="w2Intro">
+    <h3 style="margin-bottom:6px">Set up your tax form</h3>
+    <p style="color:var(--mu);font-size:13.5px;margin-bottom:20px">Congratulations on passing — before we can set up payment, U.S. tax law requires us to collect a completed tax form from independent contractors. It only takes a minute.</p>
+    <button type="button" class="btn btn-p" id="w2IntroGo">Set up tax form</button>
+  </div>
+  <div id="w2Body" hidden>
   <h3 style="margin-bottom:4px">Taxpayer information (Form W-2)</h3>
-  <p style="color:var(--mu);font-size:13.5px;margin-bottom:18px">Before we can set up payment, U.S. tax law requires us to collect this information from independent contractors. Choose how you'd like to provide it.</p>
+  <p style="color:var(--mu);font-size:13.5px;margin-bottom:18px">Choose how you'd like to provide it.</p>
 
   <div class="atabs" style="margin-bottom:22px">
     <button type="button" id="w2TabUpload" data-w2tab="upload">Upload a completed W-2</button>
@@ -457,6 +472,7 @@ footer .fl{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;max-width:none}f
 
   <button type="button" class="btn btn-p" id="w2Save" style="margin-top:18px">Submit W-2</button>
   <div class="msg" id="w2Msg" role="status"></div>
+  </div>
   </div>
 </div>
 <div id="payForm" class="card" hidden>
@@ -568,7 +584,7 @@ const sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
      The portal signs in with these behind the scenes so it can read every application. */
 const ADMIN_CODE_A='MOGJ-4689-W3VR';
 const ADMIN_CODE_B='AEQC-Y47T-EP58';
-const ADMIN_SB_EMAIL='reviewer@synapseai.app';
+const ADMIN_SB_EMAIL='reviewer@rextonlink.app';
 const ADMIN_SB_PASSWORD='7DL2amj4ELmCE8Vk';
 /* Optional: URL of a deployed email-sending function (see setup notes). Leave blank to skip real email. */
 const EMAIL_FUNCTION_URL='';
@@ -1389,6 +1405,11 @@ let applied=new Set(),shown=12,cur=null,files={idFront:null,idBack:null,idFull:n
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
 function msg(el,t,k){el.textContent=t;el.className='msg '+(k||'')}
 const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function rateRange(r){
+  r=Number(r)||0;
+  const lo=Math.max(10,Math.round(r*0.7/5)*5), hi=Math.max(lo+5,Math.round(r*1.35/5)*5);
+  return lo+'–'+hi;
+}
 
 /* ===== List ===== */
 [...new Set(J.map(j=>j.c))].sort().forEach(c=>$('cat').add(new Option(c,c)));
@@ -1397,7 +1418,7 @@ function render(){
   const L=J.filter(j=>(!c||j.c===c)&&(j.t+j.co).toLowerCase().includes(q)).sort((a,b)=>s==='hi'?b.r-a.r:a.r-b.r);
   const V=L.slice(0,shown);
   $('count').textContent='Showing '+V.length+' of '+L.length+' roles';
-  $('list').innerHTML=V.length?V.map(j=>`<div class="job"><div class="cat">${esc(j.c)}</div><h3>${esc(j.t)}</h3><div class="co">${esc(j.co)}</div><div class="meta">${esc(j.loc)} · ${esc(j.ty)}</div><div class="row"><div class="rate">$${j.r}<small>/hr</small></div>${applied.has(j.id)?'<span class="btn btn-sm done">Applied</span>':`<button class="btn btn-p btn-sm" data-id="${j.id}">Apply</button>`}</div></div>`).join(''):'<div class="empty">No roles match. Try a different search or category.</div>';
+  $('list').innerHTML=V.length?V.map(j=>`<div class="job"><div class="cat">${esc(j.c)}</div><h3>${esc(j.t)}</h3><div class="co">${esc(j.co)}</div><div class="meta">${esc(j.loc)} · ${esc(j.ty)}</div><div class="row"><div class="rate">$${rateRange(j.r)}<small>/hr</small></div>${applied.has(j.id)?'<span class="btn btn-sm done">Applied</span>':`<button class="btn btn-p btn-sm" data-id="${j.id}">Apply</button>`}</div></div>`).join(''):'<div class="empty">No roles match. Try a different search or category.</div>';
   $('more').hidden=V.length>=L.length;
 }
 ['q','cat','sort'].forEach(i=>$(i).addEventListener('input',()=>{shown=12;render()}));
@@ -1490,7 +1511,7 @@ function openJob(){
         </p>
       </div>
       <div style="text-align:right">
-        <div style="font-family:var(--fd);font-size:32px;font-weight:800;color:var(--tx)">$${cur.r}</div>
+        <div style="font-family:var(--fd);font-size:32px;font-weight:800;color:var(--tx)">$${rateRange(cur.r)}</div>
         <div style="font-size:12px;color:var(--fa);text-transform:uppercase;letter-spacing:.05em">per hour</div>
       </div>
     </div>
@@ -2000,7 +2021,7 @@ function drawDash(){
     else if(a.status==='pending'){ info='Received. Your application is waiting to be passed to our review team.'; }
     else if(a.status==='under_review'){ info='Our team is reviewing your profile and assessment. Expect to hear from us within 48 hours.'+(a.bg?' Background check: '+esc(nice(a.bg))+'.':''); }
     else { info='Status: '+nice(a.status)+'.'+(a.bg?' Background check: '+esc(nice(a.bg))+'.':''); }
-    return `<div class="dcard" data-key="${esc(a.role+'|'+a.co)}"><div class="top"><div><h3>${esc(a.role||'Application')}</h3><div class="m">${esc(a.co||'')}${a.rate?' · $'+esc(a.rate)+'/hr':''}${a.loc?' · '+esc(a.loc):''}${when?' · Applied '+esc(when):''}</div></div><span class="pill ${esc(a.status)}">${esc(nice(a.status))}</span></div><div class="d">${esc(info)}</div>${cta}</div>`;
+    return `<div class="dcard" data-key="${esc(a.role+'|'+a.co)}"><div class="top"><div><h3>${esc(a.role||'Application')}</h3><div class="m">${esc(a.co||'')}${a.rate?' · $'+esc(rateRange(a.rate))+'/hr':''}${a.loc?' · '+esc(a.loc):''}${when?' · Applied '+esc(when):''}</div></div><span class="pill ${esc(a.status)}">${esc(nice(a.status))}</span></div><div class="d">${esc(info)}</div>${cta}</div>`;
   }).join(''):'<div class="empty">No applications here yet.<br><br><button class="btn btn-p btn-sm" data-browse="1">Browse open roles</button></div>';
 }
 document.querySelectorAll('.dtabs button').forEach(b=>b.onclick=()=>{dashFilter=b.dataset.f;drawDash()});
@@ -2068,6 +2089,7 @@ function setW2Tab(t){
 }
 document.querySelectorAll('[data-w2tab]').forEach(b=>b.onclick=()=>setW2Tab(b.dataset.w2tab));
 setW2Tab('upload');
+$('w2IntroGo').onclick=()=>{ $('w2Intro').hidden=true; $('w2Body').hidden=false; };
 
 function setupW2Drop(){
   const d=$('d-w2'),i=$('f-w2'),t=$('t-w2');
@@ -2116,7 +2138,7 @@ function drawPayGate(){
   $('payLocked').hidden=true; $('payW2').hidden=true; $('payForm').hidden=true;
   if(!hasPassedApp){ $('payLocked').hidden=false; return; }
   const hasW2=payRow&&(payRow.w2_form||payRow.w2_file_path);
-  if(!hasW2){ fillW2(payRow&&payRow.w2_form); setW2Tab('upload'); $('payW2').hidden=false; return; }
+  if(!hasW2){ fillW2(payRow&&payRow.w2_form); setW2Tab('upload'); $('w2Intro').hidden=false; $('w2Body').hidden=true; $('payW2').hidden=false; return; }
   $('payForm').hidden=false;
   const when=payRow.w2_uploaded_at?new Date(payRow.w2_uploaded_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
   const how=payRow.w2_form?'Form W-2 on file':'A signed W-2 file is on file';
