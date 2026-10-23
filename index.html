@@ -1455,7 +1455,11 @@ function openProfile(){
         <div class="full"><label class="f" for="st">Earliest start date</label><input type="date" id="st"></div>
         <div class="full"><label class="f" for="sk">Key skills</label><input type="text" id="sk" placeholder="e.g. C/C++, reverse engineering, Kubernetes, PyTorch"></div>
         <div class="full"><label class="f" for="ab">About you (optional)</label><textarea id="ab" rows="3" placeholder="A few lines on your background and what you want to work on"></textarea></div>
-        <div class="full"><label class="f">Upload your CV</label><div class="drop" id="d-cv" tabindex="0" role="button" aria-label="Upload CV"><div id="t-cv">Drop your CV here or click to choose<small>PDF, DOC or DOCX, up to 8 MB</small></div></div><input type="file" id="f-cv" accept=".pdf,.doc,.docx" hidden></div>
+        <div class="full">
+          <label class="f">Your CV</label>
+          <div id="cvSavedBox" hidden><div class="msg ok" id="cvSavedText" style="margin:0 0 10px"></div><button type="button" class="btn btn-g btn-sm" id="cvReplaceBtn">Replace CV</button></div>
+          <div id="cvDropBox"><div class="drop" id="d-cv" tabindex="0" role="button" aria-label="Upload CV"><div id="t-cv">Drop your CV here or click to choose<small>PDF, DOC or DOCX, up to 8 MB</small></div></div><input type="file" id="f-cv" accept=".pdf,.doc,.docx" hidden></div>
+        </div>
       </div>
     </div>`;
   setupCV();prefill();
@@ -1479,6 +1483,7 @@ function setupCV(){
   ['dragleave','drop'].forEach(v=>d.addEventListener(v,e=>{e.preventDefault();d.classList.remove('over')}));
   d.addEventListener('drop',e=>pick(e.dataTransfer.files[0]));
   i.onchange=()=>pick(i.files[0]);
+  if($('cvReplaceBtn'))$('cvReplaceBtn').onclick=()=>showCvSaved(false);
 }
 
 $('profNext').onclick=()=>{
@@ -1545,15 +1550,23 @@ function openVerify(){
       <div id="idFields"></div>
     </div>
     <div class="card" style="margin-top:16px">
-      <h3 style="margin-bottom:12px">Confirm your CV</h3>
-      <div class="drop" id="d-cv2" tabindex="0" role="button" aria-label="Re-upload CV"><div id="t-cv2">${files.cv?esc(files.cv.name)+' · click to replace':(savedP&&savedP.cvPath?'Using your saved CV · click to replace':'Drop your CV here or click to choose')}<small>PDF, DOC or DOCX, up to 8 MB</small></div></div>
-      <input type="file" id="f-cv2" accept=".pdf,.doc,.docx" hidden>
+      <h3 style="margin-bottom:12px">Your CV</h3>
+      <div id="cvSavedBox2" hidden><div class="msg ok" id="cvSavedText2" style="margin:0 0 10px"></div><button type="button" class="btn btn-g btn-sm" id="cvReplaceBtn2">Replace CV</button></div>
+      <div id="cvDropBox2"><div class="drop" id="d-cv2" tabindex="0" role="button" aria-label="Re-upload CV"><div id="t-cv2">${files.cv?esc(files.cv.name)+' · click to replace':'Drop your CV here or click to choose'}<small>PDF, DOC or DOCX, up to 8 MB</small></div></div>
+      <input type="file" id="f-cv2" accept=".pdf,.doc,.docx" hidden></div>
     </div>
   `;
   if(savedP&&savedP.idType){const r=[...document.querySelectorAll('[name=dt]')].find(x=>x.value===savedP.idType);if(r)r.checked=true}
   renderIdFields();
   document.querySelectorAll('[name=dt]').forEach(r=>r.addEventListener('change',renderIdFields));
   setupCV2();
+  const cvBox2=$('cvSavedBox2');
+  if(cvBox2){
+    const on=!files.cv && !!(savedP&&savedP.cvPath);
+    cvBox2.hidden=!on; $('cvDropBox2').hidden=on;
+    if(on)$('cvSavedText2').textContent='CV on file: '+(savedP&&(savedP.cvName||String(savedP.cvPath).split('/').pop())||'your CV');
+    $('cvReplaceBtn2').onclick=()=>{cvBox2.hidden=true;$('cvDropBox2').hidden=false};
+  }
   showOnly('verifyPage');document.body.style.overflow='hidden';$('verifyPage').scrollTop=0;
   msg($('verifyMsg'),'');
 }
@@ -1561,6 +1574,15 @@ function openVerify(){
 function renderIdFields(){
   const dt=document.querySelector('[name=dt]:checked').value;
   const c=$('idFields');
+  files.idf=files.idfront=files.idback=null;
+  if(hasSavedId(dt)){
+    c.innerHTML=`<div id="idSavedBox"><div class="msg ok" style="margin:0 0 10px">ID on file from a previous application (${esc(dt)}).</div><button type="button" class="btn btn-g btn-sm" id="idReplaceBtn">Replace ID</button></div><div id="idDropBox" hidden></div>`;
+    $('idReplaceBtn').onclick=()=>{ $('idSavedBox').hidden=true; $('idDropBox').hidden=false; renderIdUploadInto($('idDropBox'),dt); };
+    return;
+  }
+  renderIdUploadInto(c,dt);
+}
+function renderIdUploadInto(c,dt){
   if(dt==='Passport'){
     c.innerHTML=`<label class="f">Passport — full page</label><div class="drop" id="d-idf" tabindex="0" role="button" aria-label="Upload passport"><div id="t-idf">Drop your full passport page here or click to choose<small>JPG, PNG or PDF, up to 8 MB</small></div></div><input type="file" id="f-idf" accept="image/*,application/pdf" hidden>`;
     setupDrop('idf',/\.(jpe?g|png|pdf)$/i,'full passport');
@@ -1934,7 +1956,12 @@ function prefill(){
   if(session.name&&!$('nm').value)$('nm').value=session.name;
   const t=$('t-cv');
   if(files.cv)t.textContent=files.cv.name+' · click to replace';
-  else if(savedP&&savedP.cvPath)t.textContent='Using your saved CV ('+(savedP.cvName||String(savedP.cvPath).split('/').pop())+') · click to replace';
+  showCvSaved(!files.cv && !!(savedP&&savedP.cvPath));
+}
+function showCvSaved(on){
+  const box=$('cvSavedBox'); if(!box)return;
+  box.hidden=!on; $('cvDropBox').hidden=on;
+  if(on)$('cvSavedText').textContent='CV on file: '+(savedP&&(savedP.cvName||String(savedP.cvPath).split('/').pop())||'your CV');
 }
 
 function setMode(m){
@@ -2233,13 +2260,6 @@ function rememberProfile(){
     localStorage.setItem('synapse-profile:'+session.email,JSON.stringify(o));savedP=o;
   }catch(e){}
 }
-const _rif=renderIdFields;
-renderIdFields=function(){
-  _rif();
-  const dt=document.querySelector('[name=dt]:checked').value;
-  if(hasSavedId(dt))$('idFields').insertAdjacentHTML('afterbegin','<div class="msg ok" style="margin:0 0 16px">ID on file from your previous application. Upload new files only if you want to replace it.</div>');
-};
-
 /* ===== Admin portal ===== */
 let adminToken=null,adminData=[],adminFilter='',adminSearch='';
 function adminHeaders(extra){ const h={apikey:SUPABASE_KEY,Authorization:'Bearer '+adminToken}; for(const k in (extra||{}))h[k]=extra[k]; return h; }
